@@ -1,0 +1,14 @@
+.bluetooth-device-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.connection-control {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.ant-statistic {
+  text-align: center;
+}

@@ -1,0 +1,16 @@
+.health-dashboard {
+  padding: 0;
+}
+
+.score-card {
+  background: linear-gradient(135deg, #ffdfb5 0%, #ffe6c4 100%);
+  color: #582d1d;
+}
+
+.score-card .ant-card-body {
+  padding: 32px;
+}
+
+.score-card p {
+  margin: 0;
+}

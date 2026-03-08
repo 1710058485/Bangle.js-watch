@@ -1,0 +1,11 @@
+.recorder-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .recorder-page {
+    padding: 16px;
+  }
+}

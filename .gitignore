@@ -1,2 +1,48 @@
+# macOS
 .DS_Store
 *.DS_Store
+
+# Backend (Node.js)
+back/node_modules/
+back/.env
+back/npm-debug.log*
+back/yarn-debug.log*
+back/yarn-error.log*
+
+# Backend (Java/Maven) - 旧版本，可以删除
+back/target/
+back/.idea/
+back/*.iml
+back/*.iws
+back/*.ipr
+back/.settings/
+back/.classpath
+back/.project
+back/pom.xml
+back/mvnw
+back/mvnw.cmd
+back/.mvn/
+back/src/
+
+# Frontend (Node.js)
+front/node_modules/
+front/dist/
+front/.vite/
+front/.env.local
+front/.env.*.local
+front/npm-debug.log*
+front/yarn-debug.log*
+front/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Database
+*.sql.backup

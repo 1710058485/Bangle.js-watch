@@ -1,0 +1,41 @@
+.main-layout {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #644a40 0%, #66493e 100%);
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(100, 74, 64, 0.15);
+}
+
+.logo {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.user-info {
+  color: white;
+}
+
+.sider {
+  background: #fbfbfb;
+  min-height: calc(100vh - 64px);
+  border-right: 1px solid #ebebeb;
+}
+
+.content-layout {
+  padding: 24px;
+  background: #f9f9f9;
+}
+
+.content {
+  background: #fcfcfc;
+  padding: 24px;
+  min-height: calc(100vh - 112px);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}

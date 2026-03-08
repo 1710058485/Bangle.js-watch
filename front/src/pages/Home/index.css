@@ -1,0 +1,18 @@
+.home-container {
+  width: 100%;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #ffdfb5 0%, #ffe6c4 100%);
+  color: #582d1d;
+}
+
+.welcome-card h2 {
+  color: #582d1d;
+  margin-bottom: 8px;
+}
+
+.welcome-card p {
+  color: #66493e;
+  margin: 0;
+}

@@ -1,0 +1,781 @@
+import { useState, useEffect, useRef } from 'react'
+import { Card, Button, message, Descriptions, Space, Alert, Statistic, Row, Col, Switch, Result, Modal, Table, Popconfirm, Tag, Badge } from 'antd'
+import {
+  ApiOutlined,
+  ReloadOutlined,
+  ThunderboltOutlined,
+  InfoCircleOutlined,
+  BulbOutlined,
+  BulbFilled,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  LineChartOutlined,
+  HeartOutlined,
+  DatabaseOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
+import { useTranslation } from 'react-i18next'
+import bluetoothManager from '../../utils/bluetooth'
+import { saveSensorRecord, getSensorRecords, clearSensorRecords } from '../../api/sensor'
+import './index.css'
+
+const BluetoothDevice = () => {
+  const { t } = useTranslation()
+  const [isSupported, setIsSupported] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
+  const [deviceInfo, setDeviceInfo] = useState(null)
+  const [batteryLevel, setBatteryLevel] = useState(null)
+  const [heartRate, setHeartRate] = useState(null)
+  const [connectionStatus, setConnectionStatus] = useState(t('bluetooth.notConnected'))
+  const [autoReconnect, setAutoReconnect] = useState(false)
+
+  const [ledStatus, setLedStatus] = useState(false)
+  const [pressureData, setPressureData] = useState(null)
+  const [hrmData, setHrmData] = useState(null)
+  const [accelData, setAccelData] = useState(null)
+  const [dataEnabled, setDataEnabled] = useState(false)
+  const [isStartingData, setIsStartingData] = useState(false)
+  const [lastBarometerUpdate, setLastBarometerUpdate] = useState(0)
+  const [isRecording, setIsRecording] = useState(false)
+
+  // 传感器数据记录
+  const [showRecordsModal, setShowRecordsModal] = useState(false)
+  const [sensorRecords, setSensorRecords] = useState([])
+  const [sensorTotal, setSensorTotal] = useState(0)
+  const [sensorPage, setSensorPage] = useState(1)
+  const [sensorLoading, setSensorLoading] = useState(false)
+
+  // 用 ref 保存最新传感器值，避免闭包捕获旧值
+  const hrmRef = useRef(null)
+  const accelRef = useRef(null)
+  const pressureRef = useRef(null)
+
+  useEffect(() => {
+    // 检查浏览器支持
+    setIsSupported(bluetoothManager.constructor.isSupported())
+
+    const initDeviceState = async () => {
+      try {
+        const info = await bluetoothManager.getDeviceInfo()
+        setDeviceInfo(info)
+      } catch (e) {}
+      try {
+        const battery = await bluetoothManager.getBatteryLevel()
+        if (battery !== null) setBatteryLevel(battery)
+      } catch (e) {}
+      try {
+        await bluetoothManager.startNotifications('heart_rate', 'heart_rate_measurement', (value) => {
+          const rate = value.getUint8(1)
+          setHeartRate(rate)
+        })
+      } catch (e) {}
+    }
+
+    // 定义事件处理函数
+    const onConnected = async (device) => {
+      setIsConnected(true)
+      setConnectionStatus('已连接')
+      message.success(`已连接到设备: ${device.name}`)
+      await initDeviceState()
+    }
+
+    const onDisconnected = () => {
+      setIsConnected(false)
+      setConnectionStatus('已断开')
+      setDeviceInfo(null)
+      setBatteryLevel(null)
+      setHeartRate(null)
+      setSupportedServices([])
+      setDataEnabled(false)
+      setHrmData(null)
+      setAccelData(null)
+      setPressureData(null)
+      message.warning('设备已断开连接')
+    }
+
+    // 监听实时数据事件（从导航栏的数据获取功能广播）
+    const onHrmData = (data) => {
+      setHrmData(data)
+      if (!dataEnabled) setDataEnabled(true) // 如果收到数据，说明数据获取已开启
+    }
+
+    const onAccelData = (data) => {
+      setAccelData(data)
+      if (!dataEnabled) setDataEnabled(true)
+    }
+
+    const onBarometerData = (data) => {
+      setPressureData(data)
+      if (!dataEnabled) setDataEnabled(true)
+    }
+
+    // 监听连接事件
+    bluetoothManager.on('connected', onConnected)
+    bluetoothManager.on('disconnected', onDisconnected)
+    bluetoothManager.on('hrmData', onHrmData)
+    bluetoothManager.on('accelData', onAccelData)
+    bluetoothManager.on('barometerData', onBarometerData)
+
+    // 如果已经连接（从其他页面切换过来），恢复状态
+    if (bluetoothManager.isConnected) {
+      setIsConnected(true)
+      setConnectionStatus('已连接')
+      initDeviceState()
+    }
+
+    return () => {
+      // 仅移除事件监听，不断开连接（连接由导航栏全局管理）
+      bluetoothManager.off('connected', onConnected)
+      bluetoothManager.off('disconnected', onDisconnected)
+      bluetoothManager.off('hrmData', onHrmData)
+      bluetoothManager.off('accelData', onAccelData)
+      bluetoothManager.off('barometerData', onBarometerData)
+    }
+  }, [])
+
+  const handleRefreshBattery = async () => {
+    try {
+      const battery = await bluetoothManager.getBatteryLevel()
+      setBatteryLevel(battery)
+      message.success('电池电量已更新')
+    } catch (error) {
+      message.error('获取电池电量失败')
+    }
+  }
+
+  const handleAutoReconnectChange = (checked) => {
+    setAutoReconnect(checked)
+    bluetoothManager.setAutoReconnect(checked, 3)
+    message.info(checked ? '已启用自动重连' : '已禁用自动重连')
+  }
+
+  const handleLedToggle = async () => {
+    try {
+      const newStatus = !ledStatus
+      const command = newStatus ? 'LED1.set()' : 'LED1.reset()'
+
+      await bluetoothManager.sendUARTCommand(command)
+      setLedStatus(newStatus)
+      message.success(newStatus ? '手表灯已开启' : '手表灯已关闭')
+    } catch (error) {
+      message.error('控制手表灯失败: ' + error.message)
+      console.error('LED 控制失败:', error)
+    }
+  }
+
+  const handleDataToggle = async () => {
+    if (dataEnabled) {
+      // 关闭传感器
+      try { await bluetoothManager.sendUARTCommand('Bangle.setBarometerPower(false)') } catch (e) {}
+      try { await bluetoothManager.sendUARTCommand('Bangle.setHRMPower(0)') } catch (e) {}
+      try { await bluetoothManager.sendUARTCommand("Bangle.removeAllListeners('accel')") } catch (e) {}
+      clearInterval(window._sensorSaveInterval)
+      hrmRef.current = null
+      accelRef.current = null
+      pressureRef.current = null
+      setDataEnabled(false)
+      setPressureData(null)
+      setHrmData(null)
+      setAccelData(null)
+      message.success('数据获取已关闭')
+      return
+    }
+
+    setIsStartingData(true)
+    try {
+      // 统一监听 UART 响应，根据字段分发数据
+      await bluetoothManager.listenUARTResponse((response) => {
+        try {
+          const jsonMatch = response.match(/\{[^}]+\}/)
+          if (!jsonMatch) return
+          const info = JSON.parse(jsonMatch[0])
+          if (info.pressure !== undefined) {
+            pressureRef.current = info
+            bluetoothManager.emit('barometerData', info)
+            const now = Date.now()
+            setLastBarometerUpdate(prev => {
+              if (now - prev >= 10000) { setPressureData(info); return now }
+              return prev
+            })
+          } else if (info.bpm !== undefined) {
+            hrmRef.current = info
+            setHrmData(info)
+            bluetoothManager.emit('hrmData', info)
+          } else if (info.x !== undefined) {
+            accelRef.current = info
+            setAccelData(info)
+          }
+        } catch (e) {
+          console.error('[传感器] 解析 UART 响应失败:', e, '原始数据:', response)
+        }
+      })
+
+      // 每 5 秒将当前传感器快照存入数据库
+      window._sensorSaveInterval = setInterval(async () => {
+        const payload = {
+          bpm: hrmRef.current?.bpm ?? null,
+          accel_x: accelRef.current?.x ?? null,
+          accel_y: accelRef.current?.y ?? null,
+          accel_z: accelRef.current?.z ?? null,
+          pressure: pressureRef.current?.pressure ?? null,
+          pressure_temp: pressureRef.current?.temperature ?? null,
+          pressure_alt: pressureRef.current?.altitude ?? null,
+        }
+        console.log('[传感器] 定时存库，数据快照:', payload)
+        try {
+          const res = await saveSensorRecord(payload)
+          console.log('[传感器] 存库成功，id:', res.data?.id)
+        } catch (err) {
+          console.error('[传感器] 存库失败:', err)
+        }
+      }, 5000)
+
+      // 开启传感器并注册事件
+      await bluetoothManager.sendUARTCommand('Bangle.setBarometerPower(true)')
+      await bluetoothManager.sendUARTCommand(
+        `Bangle.on('pressure',function(d){print(JSON.stringify({temperature:d.temperature,pressure:d.pressure,altitude:d.altitude}));})`
+      )
+      await bluetoothManager.sendUARTCommand('Bangle.setHRMPower(1)')
+      await bluetoothManager.sendUARTCommand(
+        `Bangle.on('HRM',function(h){print(JSON.stringify({bpm:h.bpm,confidence:h.confidence,src:h.src}));})`
+      )
+      await bluetoothManager.sendUARTCommand(
+        `Bangle.on('accel',function(a){print(JSON.stringify({x:a.x.toFixed(2),y:a.y.toFixed(2),z:a.z.toFixed(2)}));})`
+      )
+
+      setDataEnabled(true)
+      message.success('数据获取已开启')
+    } catch (error) {
+      message.error('启动数据获取失败: ' + error.message)
+    } finally {
+      setIsStartingData(false)
+    }
+  }
+
+  const handleStartRecording = async () => {
+    try {
+      message.loading('正在启动记录...', 0)
+
+      await bluetoothManager.sendUARTCommand(
+        `require("recorder").setRecording(true, {force:"new"})`
+      )
+
+      message.destroy()
+      setIsRecording(true)
+      message.success('记录已启动，数据将在后台持续记录')
+    } catch (error) {
+      message.destroy()
+      message.error('启动记录失败: ' + error.message)
+      console.error('启动记录失败:', error)
+    }
+  }
+
+  const handleStopRecording = async () => {
+    try {
+      message.loading('正在停止记录...', 0)
+
+      await bluetoothManager.sendUARTCommand('require("recorder").setRecording(false)')
+
+      message.destroy()
+      setIsRecording(false)
+      message.success('记录已停止')
+    } catch (error) {
+      message.destroy()
+      message.error('停止记录失败: ' + error.message)
+      console.error('停止记录失败:', error)
+    }
+  }
+
+  const handleViewSensorRecords = async (page = 1) => {
+    setSensorLoading(true)
+    setShowRecordsModal(true)
+    try {
+      const res = await getSensorRecords(page, 20)
+      if (res.code === 200) {
+        setSensorRecords(res.data.list)
+        setSensorTotal(res.data.total)
+        setSensorPage(page)
+      }
+    } catch (e) {
+      message.error('获取数据失败')
+    } finally {
+      setSensorLoading(false)
+    }
+  }
+
+  const handleClearSensorRecords = async () => {
+    try {
+      await clearSensorRecords()
+      message.success('数据已清空')
+      setSensorRecords([])
+      setSensorTotal(0)
+    } catch (e) {
+      message.error('清空失败')
+    }
+  }
+
+  if (!isSupported) {
+    return (
+      <div className="bluetooth-device-page">
+        <Alert
+          message="浏览器不支持"
+          description={
+            <div>
+              <p>当前浏览器不支持 Web Bluetooth API。</p>
+              <p>请使用以下浏览器：</p>
+              <ul>
+                <li>Chrome 56+ (推荐)</li>
+                <li>Edge 79+</li>
+                <li>Opera 43+</li>
+              </ul>
+              <p>注意：需要在 HTTPS 环境下使用</p>
+            </div>
+          }
+          type="error"
+          showIcon
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="bluetooth-device-page">
+      <Card
+        title={
+          <Space>
+            <ApiOutlined />
+            蓝牙设备管理
+          </Space>
+        }
+        extra={
+          <Badge status={isConnected ? 'success' : 'default'} text={connectionStatus} />
+        }
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          {/* 未连接时的提示 */}
+          {!isConnected && (
+            <Result
+              icon={<ApiOutlined style={{ color: '#d9d9d9' }} />}
+              title="手表未连接"
+              subTitle={
+                <Space direction="vertical" size={4}>
+                  <span>请点击右上角 <strong>「连接手表」</strong> 按钮扫描并连接蓝牙设备</span>
+                  <span style={{ color: '#bfbfbf', fontSize: 12 }}>连接成功后此页面将自动显示设备信息与控制功能</span>
+                </Space>
+              }
+              extra={
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <Space>
+                    <span style={{ color: '#999', fontSize: 13 }}>自动重连：</span>
+                    <Switch
+                      checked={autoReconnect}
+                      onChange={handleAutoReconnectChange}
+                      checkedChildren="开启"
+                      unCheckedChildren="关闭"
+                      size="small"
+                    />
+                    <span style={{ color: '#bfbfbf', fontSize: 12 }}>（断开后自动尝试重连3次）</span>
+                  </Space>
+                </Space>
+              }
+            />
+          )}
+
+          {/* 已连接时的设置条 */}
+          {isConnected && (
+            <Card size="small">
+              <Space>
+                <span style={{ color: '#999', fontSize: 13 }}>自动重连：</span>
+                <Switch
+                  checked={autoReconnect}
+                  onChange={handleAutoReconnectChange}
+                  checkedChildren="开启"
+                  unCheckedChildren="关闭"
+                  size="small"
+                />
+                <span style={{ color: '#bfbfbf', fontSize: 12 }}>（断开后自动尝试重连3次）</span>
+              </Space>
+            </Card>
+          )}
+
+          {/* 设备信息 */}
+          {isConnected && deviceInfo && (
+            <Card
+              title={
+                <Space>
+                  <InfoCircleOutlined />
+                  设备信息
+                </Space>
+              }
+              size="small"
+            >
+              <Descriptions column={1} bordered size="small">
+                <Descriptions.Item label="设备名称">{deviceInfo.name}</Descriptions.Item>
+                <Descriptions.Item label="设备 ID">{deviceInfo.id}</Descriptions.Item>
+                {deviceInfo.manufacturer && (
+                  <Descriptions.Item label="制造商">{deviceInfo.manufacturer}</Descriptions.Item>
+                )}
+                {deviceInfo.model && (
+                  <Descriptions.Item label="型号">{deviceInfo.model}</Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+          )}
+
+          {/* 实时数据 */}
+          {isConnected && (
+            <Card title="实时数据" size="small">
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Card>
+                    <Statistic
+                      title="电池电量"
+                      value={batteryLevel !== null ? batteryLevel : '--'}
+                      suffix="%"
+                      prefix={<ThunderboltOutlined />}
+                    />
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<ReloadOutlined />}
+                      onClick={handleRefreshBattery}
+                      style={{ marginTop: 8 }}
+                    >
+                      刷新
+                    </Button>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card>
+                    <Statistic
+                      title="心率"
+                      value={hrmData ? hrmData.bpm : (heartRate !== null ? heartRate : '--')}
+                      suffix="bpm"
+                      valueStyle={{ color: '#cf1322' }}
+                      prefix={<HeartOutlined />}
+                    />
+                    {hrmData && (
+                      <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+                        置信度: {hrmData.confidence}% · {hrmData.src || '--'}
+                      </div>
+                    )}
+                  </Card>
+                </Col>
+              </Row>
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col span={24}>
+                  <Card>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>加速度 (g)</div>
+                    <Row gutter={8}>
+                      <Col span={8}><Statistic title="X" value={accelData ? accelData.x : '--'} valueStyle={{ fontSize: 16, color: '#13c2c2' }} /></Col>
+                      <Col span={8}><Statistic title="Y" value={accelData ? accelData.y : '--'} valueStyle={{ fontSize: 16, color: '#13c2c2' }} /></Col>
+                      <Col span={8}><Statistic title="Z" value={accelData ? accelData.z : '--'} valueStyle={{ fontSize: 16, color: '#13c2c2' }} /></Col>
+                    </Row>
+                  </Card>
+                </Col>
+              </Row>
+            </Card>
+          )}
+
+          {/* 气压计数据 */}
+          {isConnected && dataEnabled && pressureData && (
+            <Card
+              title={
+                <Space>
+                  <ThunderboltOutlined />
+                  气压计数据
+                </Space>
+              }
+              size="small"
+            >
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Card>
+                    <Statistic
+                      title="温度"
+                      value={pressureData.temperature ? pressureData.temperature.toFixed(2) : '--'}
+                      suffix="°C"
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card>
+                    <Statistic
+                      title="气压"
+                      value={pressureData.pressure ? pressureData.pressure.toFixed(2) : '--'}
+                      suffix="hPa"
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card>
+                    <Statistic
+                      title="海拔"
+                      value={pressureData.altitude ? pressureData.altitude.toFixed(1) : '--'}
+                      suffix="m"
+                      valueStyle={{ color: '#faad14' }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+            </Card>
+          )}
+
+          {/* 设备控制 */}
+          {isConnected && (
+            <Card title="设备控制" size="small">
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                {/* 手表灯控制 */}
+                <Card size="small" style={{ background: '#fafafa' }}>
+                  <Row align="middle" justify="space-between">
+                    <Col>
+                      <Space>
+                        {ledStatus ? <BulbFilled style={{ fontSize: 24, color: '#faad14' }} /> : <BulbOutlined style={{ fontSize: 24 }} />}
+                        <div>
+                          <div style={{ fontWeight: 500 }}>手表灯</div>
+                          <div style={{ fontSize: 12, color: '#999' }}>{ledStatus ? '已开启' : '已关闭'}</div>
+                        </div>
+                      </Space>
+                    </Col>
+                    <Col>
+                      <Button
+                        type={ledStatus ? 'default' : 'primary'}
+                        size="large"
+                        onClick={handleLedToggle}
+                        icon={ledStatus ? <BulbFilled /> : <BulbOutlined />}
+                      >
+                        {ledStatus ? '关闭' : '开启'}
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card>
+
+                {/* 数据获取状态提示 */}
+                <Card size="small" style={{ background: dataEnabled ? '#f6ffed' : '#fafafa', borderColor: dataEnabled ? '#b7eb8f' : undefined }}>
+                  <Row align="middle" justify="space-between">
+                    <Col>
+                      <Space>
+                        <ReloadOutlined style={{ fontSize: 24, color: dataEnabled ? '#52c41a' : '#999' }} spin={dataEnabled} />
+                        <div>
+                          <div style={{ fontWeight: 500 }}>数据获取</div>
+                          <div style={{ fontSize: 12, color: '#999' }}>
+                            {dataEnabled ? '正在获取传感器数据' : '请在导航栏开启数据获取'}
+                          </div>
+                        </div>
+                      </Space>
+                    </Col>
+                    <Col>
+                      <Tag color={dataEnabled ? 'success' : 'default'} style={{ fontSize: 14, padding: '4px 12px' }}>
+                        {dataEnabled ? '已开启' : '未开启'}
+                      </Tag>
+                    </Col>
+                  </Row>
+                </Card>
+
+                {/* 查看传感器数据库记录 */}
+                {dataEnabled && (
+                  <Button
+                    type="dashed"
+                    icon={<DatabaseOutlined />}
+                    onClick={() => handleViewSensorRecords(1)}
+                    block
+                  >
+                    查看传感器数据记录
+                  </Button>
+                )}
+              </Space>
+            </Card>
+          )}
+
+          {/* 数据记录器 */}
+          {isConnected && (
+            <Card
+              title={
+                <Space>
+                  <LineChartOutlined />
+                  数据记录器
+                </Space>
+              }
+              extra={
+                <Badge
+                  status={isRecording ? 'processing' : 'default'}
+                  text={isRecording ? '记录中' : '未记录'}
+                />
+              }
+              size="small"
+            >
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                {/* 记录控制 */}
+                <Card size="small" style={{ background: '#fafafa' }}>
+                  <Row align="middle" justify="space-between">
+                    <Col flex="auto">
+                      <Space>
+                        <LineChartOutlined style={{ fontSize: 24, color: isRecording ? '#52c41a' : '#999' }} />
+                        <div>
+                          <div style={{ fontWeight: 500 }}>后台数据记录</div>
+                          <div style={{ fontSize: 12, color: '#999' }}>
+                            {isRecording ? '正在记录 GPS、心率、电池等数据' : '点击开始记录运动轨迹'}
+                          </div>
+                        </div>
+                      </Space>
+                    </Col>
+                    <Col>
+                      {!isRecording ? (
+                        <Button
+                          type="primary"
+                          size="large"
+                          icon={<PlayCircleOutlined />}
+                          onClick={handleStartRecording}
+                        >
+                          开始记录
+                        </Button>
+                      ) : (
+                        <Button
+                          danger
+                          size="large"
+                          icon={<PauseCircleOutlined />}
+                          onClick={handleStopRecording}
+                        >
+                          停止记录
+                        </Button>
+                      )}
+                    </Col>
+                  </Row>
+                </Card>
+
+                {/* 记录说明 */}
+                <Alert
+                  message="记录功能说明"
+                  description={
+                    <ul style={{ marginBottom: 0, paddingLeft: 20, fontSize: 12 }}>
+                      <li>记录会在后台持续进行，可以切换到其他应用</li>
+                      <li>自动记录 GPS 位置、心率、电池、步数、气压等数据</li>
+                      <li>点击下方"查看记录"按钮可以查看和下载已保存的轨迹</li>
+                      <li>支持导出为 CSV 格式</li>
+                    </ul>
+                  }
+                  type="info"
+                  showIcon
+                  style={{ fontSize: 12 }}
+                />
+
+              </Space>
+            </Card>
+          )}
+
+          {/* 使用说明 */}
+          <Alert
+            message="使用说明"
+            description={
+              <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
+                <li>点击右上角 <strong>「连接手表」</strong> 按钮开始扫描蓝牙设备</li>
+                <li>在弹出的对话框中选择要连接的设备</li>
+                <li>连接后切换到任意页面，连接状态保持不变</li>
+                <li>点击右上角设备名称可查看电量或断开连接</li>
+                <li>支持自动重连（最多3次）</li>
+              </ul>
+            }
+            type="info"
+            showIcon
+          />
+        </Space>
+      </Card>
+
+      {/* 传感器数据记录弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <DatabaseOutlined />
+            传感器数据记录
+            <Tag color="blue">{sensorTotal} 条</Tag>
+          </Space>
+        }
+        open={showRecordsModal}
+        onCancel={() => setShowRecordsModal(false)}
+        footer={
+          <Space>
+            <Popconfirm
+              title="确认清空所有传感器数据记录？"
+              onConfirm={handleClearSensorRecords}
+              okText="确认"
+              cancelText="取消"
+            >
+              <Button danger icon={<DeleteOutlined />}>清空数据</Button>
+            </Popconfirm>
+            <Button onClick={() => setShowRecordsModal(false)}>关闭</Button>
+          </Space>
+        }
+        width={900}
+      >
+        <Table
+          loading={sensorLoading}
+          dataSource={sensorRecords}
+          rowKey="id"
+          size="small"
+          scroll={{ x: 800 }}
+          pagination={{
+            current: sensorPage,
+            total: sensorTotal,
+            pageSize: 20,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (page) => handleViewSensorRecords(page),
+          }}
+          columns={[
+            {
+              title: '时间',
+              dataIndex: 'created_at',
+              width: 170,
+              render: (v) => v ? new Date(v).toLocaleString('zh-CN') : '--',
+            },
+            {
+              title: '心率(bpm)',
+              dataIndex: 'bpm',
+              width: 100,
+              render: (v) => v != null ? <Tag color="red">{v}</Tag> : '--',
+            },
+            {
+              title: '加速度 X',
+              dataIndex: 'accel_x',
+              width: 90,
+              render: (v) => v != null ? Number(v).toFixed(2) : '--',
+            },
+            {
+              title: '加速度 Y',
+              dataIndex: 'accel_y',
+              width: 90,
+              render: (v) => v != null ? Number(v).toFixed(2) : '--',
+            },
+            {
+              title: '加速度 Z',
+              dataIndex: 'accel_z',
+              width: 90,
+              render: (v) => v != null ? Number(v).toFixed(2) : '--',
+            },
+            {
+              title: '温度(°C)',
+              dataIndex: 'pressure_temp',
+              width: 90,
+              render: (v) => v != null ? Number(v).toFixed(2) : '--',
+            },
+            {
+              title: '气压(hPa)',
+              dataIndex: 'pressure',
+              width: 100,
+              render: (v) => v != null ? Number(v).toFixed(2) : '--',
+            },
+            {
+              title: '海拔(m)',
+              dataIndex: 'pressure_alt',
+              width: 90,
+              render: (v) => v != null ? Number(v).toFixed(1) : '--',
+            },
+          ]}
+        />
+      </Modal>
+    </div>
+  )
+}
+
+export default BluetoothDevice
