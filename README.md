@@ -294,14 +294,4 @@ Check:
 - [MenuVertical Component Integration](front/MENU_VERTICAL_INTEGRATION.md)
 - [Backend API Documentation](back/README.md)
 
-## License
 
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
