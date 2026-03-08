@@ -1,72 +1,72 @@
-# 🎨 项目主题色更新说明
+# 🎨 Project Theme Update Guide
 
-## ✅ 已完成的更新
+## ✅ Completed Updates
 
-### 1. 全局 CSS 变量 (`/src/styles/global.css`)
-已更新为棕色/米色系主题，包含：
-- ✅ 浅色模式（Light Mode）
-- ✅ 深色模式（Dark Mode）
-- ✅ 完整的颜色变量系统
+### 1. Global CSS Variables (`/src/styles/global.css`)
+Updated to brown/beige theme system, including:
+- ✅ Light Mode
+- ✅ Dark Mode
+- ✅ Complete color variable system
 
-### 2. Tailwind 配置 (`tailwind.config.js`)
-- ✅ 添加 `darkMode: 'class'` 支持深色模式
-- ✅ 更新颜色映射以使用新的 CSS 变量
-- ✅ 添加 sidebar 和 chart 颜色支持
-- ✅ 移除 HSL 包装，直接使用十六进制颜色值
+### 2. Tailwind Configuration (`tailwind.config.js`)
+- ✅ Added `darkMode: 'class'` for dark mode support
+- ✅ Updated color mapping to use new CSS variables
+- ✅ Added sidebar and chart color support
+- ✅ Removed HSL wrapper, using hex color values directly
 
-## 🎨 新主题配色方案
+## 🎨 New Theme Color Scheme
 
-### 浅色模式（Light Mode）
-| 用途 | 颜色 | 说明 |
-|------|------|------|
-| **主色** | `#644a40` | 深棕色 - 按钮、链接 |
-| **次要色** | `#ffdfb5` | 米黄色 - 次要元素 |
-| **背景** | `#f9f9f9` | 浅灰色 - 页面背景 |
-| **卡片** | `#fcfcfc` | 近白色 - 卡片背景 |
-| **边框** | `#d8d8d8` | 浅灰色 - 边框线 |
-| **文字** | `#202020` | 深灰色 - 主要文字 |
-| **危险色** | `#e54d2e` | 红色 - 删除、错误 |
+### Light Mode
+| Purpose | Color | Description |
+|---------|-------|-------------|
+| **Primary** | `#644a40` | Dark brown - buttons, links |
+| **Secondary** | `#ffdfb5` | Beige - secondary elements |
+| **Background** | `#f9f9f9` | Light gray - page background |
+| **Card** | `#fcfcfc` | Near white - card background |
+| **Border** | `#d8d8d8` | Light gray - border lines |
+| **Text** | `#202020` | Dark gray - main text |
+| **Danger** | `#e54d2e` | Red - delete, errors |
 
-### 深色模式（Dark Mode）
-| 用途 | 颜色 | 说明 |
-|------|------|------|
-| **主色** | `#ffe0c2` | 浅米色 - 按钮、链接 |
-| **次要色** | `#393028` | 深棕色 - 次要元素 |
-| **背景** | `#111111` | 深黑色 - 页面背景 |
-| **卡片** | `#191919` | 深灰色 - 卡片背景 |
-| **边框** | `#201e18` | 深棕灰 - 边框线 |
-| **文字** | `#eeeeee` | 浅灰色 - 主要文字 |
+### Dark Mode
+| Purpose | Color | Description |
+|---------|-------|-------------|
+| **Primary** | `#ffe0c2` | Light beige - buttons, links |
+| **Secondary** | `#393028` | Dark brown - secondary elements |
+| **Background** | `#111111` | Deep black - page background |
+| **Card** | `#191919` | Dark gray - card background |
+| **Border** | `#201e18` | Dark brown-gray - border lines |
+| **Text** | `#eeeeee` | Light gray - main text |
 
-### 图表颜色
-- Chart 1: `#644a40` / `#ffe0c2` (主棕色)
-- Chart 2: `#ffdfb5` / `#393028` (米黄/深棕)
-- Chart 3: `#e8e8e8` / `#2a2a2a` (浅灰/深灰)
-- Chart 4: `#ffe6c4` / `#42382e` (浅米/深棕)
-- Chart 5: `#66493e` / `#ffe0c1` (中棕/浅米)
+### Chart Colors
+- Chart 1: `#644a40` / `#ffe0c2` (main brown)
+- Chart 2: `#ffdfb5` / `#393028` (beige/dark brown)
+- Chart 3: `#e8e8e8` / `#2a2a2a` (light gray/dark gray)
+- Chart 4: `#ffe6c4` / `#42382e` (light beige/dark brown)
+- Chart 5: `#66493e` / `#ffe0c1` (medium brown/light beige)
 
-## 🔧 如何使用新主题
+## 🔧 How to Use the New Theme
 
-### 在 Tailwind 类中使用
+### Using in Tailwind Classes
 ```jsx
-// 背景色
+// Background colors
 <div className="bg-background">
 <div className="bg-card">
 <div className="bg-primary">
 
-// 文字颜色
+// Text colors
 <p className="text-foreground">
 <p className="text-muted-foreground">
 <p className="text-primary">
 
-// 边框
+// Borders
 <div className="border border-border">
 
-// 按钮
+// Buttons
 <button className="bg-primary text-primary-foreground">
 <button className="bg-secondary text-secondary-foreground">
 ```
 
-### 在 CSS 中使用
+### Using in CSS
 ```css
 .my-element {
   background-color: var(--background);
@@ -80,20 +80,20 @@
 }
 ```
 
-### 启用深色模式
-在根元素添加 `dark` 类：
+### Enabling Dark Mode
+Add the `dark` class to the root element:
 ```jsx
 <html className="dark">
-  {/* 内容 */}
+  {/* content */}
 </html>
 ```
 
-或使用 JavaScript 切换：
+Or toggle with JavaScript:
 ```javascript
 document.documentElement.classList.toggle('dark')
 ```
 
-## 📊 图表组件使用
+## 📊 Chart Component Usage
 ```jsx
 import { LineChart } from 'recharts'
 
@@ -104,32 +104,32 @@ import { LineChart } from 'recharts'
 </LineChart>
 ```
 
-## 🎯 主题特点
+## 🎯 Theme Features
 
-### 1. 温暖舒适
-- 棕色系给人温暖、自然的感觉
-- 适合健康管理类应用
-- 减少视觉疲劳
+### 1. Warm and Comfortable
+- Brown color scheme provides a warm, natural feeling
+- Suitable for health management applications
+- Reduces visual fatigue
 
-### 2. 专业稳重
-- 深棕色主色调显得专业可靠
-- 米黄色次要色增添亲和力
-- 整体配色平衡协调
+### 2. Professional and Stable
+- Deep brown primary color appears professional and reliable
+- Beige secondary color adds approachability
+- Overall color scheme is balanced and harmonious
 
-### 3. 完整的深色模式
-- 自动反转颜色以适应深色环境
-- 保持良好的对比度和可读性
-- 减少夜间使用时的眼睛疲劳
+### 3. Complete Dark Mode
+- Automatically inverts colors for dark environments
+- Maintains good contrast and readability
+- Reduces eye strain during nighttime use
 
-### 4. 灵活扩展
-- 完整的颜色变量系统
-- 支持 sidebar、chart 等特殊组件
-- 易于自定义和扩展
+### 4. Flexible and Extensible
+- Complete color variable system
+- Supports special components like sidebar and charts
+- Easy to customize and extend
 
-## 🔄 与现有组件的兼容性
+## 🔄 Compatibility with Existing Components
 
-### Ant Design 组件
-Ant Design 组件会继续使用其自身的主题系统，但可以通过以下方式协调：
+### Ant Design Components
+Ant Design components will continue to use their own theme system, but can be coordinated through:
 
 ```jsx
 import { ConfigProvider } from 'antd'
@@ -145,25 +145,25 @@ import { ConfigProvider } from 'antd'
     },
   }}
 >
-  {/* 应用内容 */}
+  {/* app content */}
 </ConfigProvider>
 ```
 
-### 自定义组件
-所有使用 Tailwind 类的自定义组件会自动应用新主题。
+### Custom Components
+All custom components using Tailwind classes will automatically apply the new theme.
 
-## 🚀 下一步建议
+## 🚀 Next Steps
 
-1. **测试深色模式**：实现深色模式切换功能
-2. **统一 Ant Design**：配置 Ant Design 主题以匹配新配色
-3. **更新图表**：使用新的 chart 颜色变量
-4. **优化对比度**：确保所有文字在新背景上清晰可读
+1. **Test Dark Mode**: Implement dark mode toggle functionality
+2. **Unify Ant Design**: Configure Ant Design theme to match new color scheme
+3. **Update Charts**: Use new chart color variables
+4. **Optimize Contrast**: Ensure all text is clearly readable on new backgrounds
 
-## 📝 注意事项
+## 📝 Important Notes
 
-1. **颜色格式**：新主题使用十六进制颜色值，不是 HSL
-2. **深色模式**：需要手动添加 `dark` 类才能启用
-3. **Ant Design**：需要单独配置以匹配新主题
-4. **渐变背景**：首页和注册页的淡蓝色渐变保持不变
+1. **Color Format**: New theme uses hex color values, not HSL
+2. **Dark Mode**: Need to manually add `dark` class to enable
+3. **Ant Design**: Needs separate configuration to match new theme
+4. **Gradient Backgrounds**: Light blue gradients on home and register pages remain unchanged
 
-构建已成功，可以运行 `npm run dev` 查看新主题效果！
+Build successful! Run `npm run dev` to see the new theme in action!

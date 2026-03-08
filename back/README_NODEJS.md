@@ -1,50 +1,50 @@
-# 手表数据管理系统 - Node.js 后端
+# Watch Data Management System - Node.js Backend
 
-## 技术栈
+## Tech Stack
 
 - Node.js 18+
 - Express.js 4
 - MySQL2
 - JWT (jsonwebtoken)
-- bcrypt (密码加密)
+- bcrypt (password encryption)
 - CORS
 
-## 项目结构
+## Project Structure
 
 ```
 back/
 ├── config/
-│   └── database.js          # 数据库配置
+│   └── database.js          # Database configuration
 ├── middleware/
-│   └── auth.js              # JWT 认证中间件
+│   └── auth.js              # JWT authentication middleware
 ├── routes/
-│   ├── auth.js              # 认证路由
-│   └── user.js              # 用户路由
+│   ├── auth.js              # Authentication routes
+│   └── user.js              # User routes
 ├── services/
-│   └── userService.js       # 用户服务
-├── .env.example             # 环境变量示例
+│   └── userService.js       # User service
+├── .env.example             # Environment variables example
 ├── package.json
-└── server.js                # 主服务器文件
+└── server.js                # Main server file
 ```
 
-## 快速开始
+## Quick Start
 
-### 1. 安装依赖
+### 1. Install Dependencies
 
 ```bash
 cd back
 npm install
 ```
 
-### 2. 配置环境变量
+### 2. Configure Environment Variables
 
-复制 `.env.example` 为 `.env` 并修改配置:
+Copy `.env.example` to `.env` and modify the configuration:
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，设置数据库连接信息:
+Edit the `.env` file and set database connection information:
 
 ```env
 DB_HOST=localhost
@@ -60,42 +60,42 @@ PORT=8080
 NODE_ENV=development
 ```
 
-### 3. 初始化数据库
+### 3. Initialize Database
 
-执行 `/database/init.sql` 脚本创建数据库和表。
+Execute the `/database/init.sql` script to create the database and tables.
 
-### 4. 启动服务器
+### 4. Start Server
 
 ```bash
-# 开发模式（自动重启）
+# Development mode (auto-restart)
 npm run dev
 
-# 生产模式
+# Production mode
 npm start
 ```
 
-启动成功后，访问 http://localhost:8080
+After successful startup, visit http://localhost:8080
 
-## API 接口
+## API Endpoints
 
-### 认证接口
+### Authentication Endpoints
 
-#### 1. 用户注册
+#### 1. User Registration
 - **URL**: `POST /api/auth/register`
-- **请求体**:
+- **Request Body**:
 ```json
 {
   "username": "testuser",
   "password": "123456",
   "email": "test@example.com",
   "phone": "13800138000",
-  "nickname": "测试用户"
+  "nickname": "Test User"
 }
 ```
 
-#### 2. 用户登录
+#### 2. User Login
 - **URL**: `POST /api/auth/login`
-- **请求体**:
+- **Request Body**:
 ```json
 {
   "username": "testuser",
@@ -103,28 +103,28 @@ npm start
 }
 ```
 
-### 用户接口
+### User Endpoints
 
-#### 3. 获取当前用户信息
+#### 3. Get Current User Information
 - **URL**: `GET /api/user/info`
-- **请求头**: `Authorization: Bearer {token}`
+- **Headers**: `Authorization: Bearer {token}`
 
-## 与 Java 版本的区别
+## Differences from Java Version
 
-1. **更轻量**: 无需 JVM，启动更快
-2. **更简洁**: 代码量更少，结构更清晰
-3. **蓝牙支持**: 可以直接使用 Web Bluetooth API
-4. **相同 API**: 保持与原 Java 版本相同的接口，前端无需修改
+1. **More Lightweight**: No JVM required, faster startup
+2. **More Concise**: Less code, clearer structure
+3. **Bluetooth Support**: Can directly use Web Bluetooth API
+4. **Same API**: Maintains the same interface as the original Java version, no frontend changes needed
 
-## 安全特性
+## Security Features
 
-- 密码使用 bcrypt 加密存储
-- JWT Token 认证，默认有效期 7 天
-- CORS 跨域支持
-- 全局错误处理
+- Passwords encrypted with bcrypt
+- JWT Token authentication, default validity 7 days
+- CORS cross-origin support
+- Global error handling
 
-## 注意事项
+## Important Notes
 
-1. JWT secret 在生产环境应该使用更复杂的密钥
-2. CORS 配置在生产环境应该限制具体域名
-3. 确保 MySQL 服务已启动
+1. JWT secret should use a more complex key in production
+2. CORS configuration should restrict specific domains in production
+3. Ensure MySQL service is running
