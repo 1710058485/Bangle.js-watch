@@ -1,44 +1,73 @@
-# 手表数据管理系统
+# Bangle.js Watch Data Management System
 
-一个基于 React + Node.js 的全栈手表数据管理系统，支持蓝牙连接手表设备。
+A full-stack watch data management system built with React + Node.js, supporting Bluetooth connectivity for Bangle.js smartwatches.
 
-## 技术栈
+## Tech Stack
 
-### 前端
+### Frontend
 - React 18
 - Vite 5
 - Ant Design 5
 - Tailwind CSS
 - React Router 6
 - Axios
+- i18next (Internationalization)
+- Framer Motion
+- Recharts
 
-### 后端
+### Backend
 - Node.js 18+
 - Express.js 4
 - MySQL2
-- JWT 认证
-- bcrypt 密码加密
+- JWT Authentication
+- bcrypt Password Encryption
 
-## 快速开始
+## Features
 
-### 1. 安装所有依赖
+### ✅ Completed Features
+- User registration and login
+- JWT Token authentication
+- Password encryption
+- Responsive UI design
+- Bluetooth device connection (Web Bluetooth API)
+- Real-time sensor data acquisition (Heart rate, Accelerometer, Barometer)
+- Sensor data recording and storage
+- Historical data query with pagination
+- Health dashboard with data visualization
+- Weather forecast display
+- Statistics with charts
+- Device control (LED light)
+- Chinese/English language switching
+- Brown/Beige theme system
+- Dark mode support
 
-在项目根目录运行：
+### 🎨 Theme System
+- Complete CSS variable system
+- Light mode: Warm brown/beige color scheme
+- Dark mode: Full dark theme support
+- Ant Design theme customization
+- Chart color schemes
+
+## Quick Start
+
+### 1. Install Dependencies
+
+Run in the project root directory:
 
 ```bash
 npm run install:all
 ```
 
-这会自动安装根目录、前端和后端的所有依赖。
+This will automatically install all dependencies for root, frontend, and backend.
 
-### 2. 配置后端环境变量
+### 2. Configure Backend Environment
 
 ```bash
 cd back
 cp .env.example .env
 ```
 
-编辑 `back/.env` 文件，配置数据库连接：
+Edit `back/.env` file to configure database connection:
 
 ```env
 DB_HOST=localhost
@@ -54,127 +83,225 @@ PORT=8080
 NODE_ENV=development
 ```
 
-### 3. 初始化数据库
+### 3. Initialize Database
 
-执行数据库初始化脚本：
+Execute the database initialization script:
 
 ```bash
 mysql -u root -p < database/init.sql
 ```
 
-### 4. 启动项目
+### 4. Start the Project
 
-在项目根目录运行：
+Run in the project root directory:
 
 ```bash
 npm run dev
 ```
 
-这会同时启动：
-- 前端开发服务器：http://localhost:5173
-- 后端 API 服务器：http://localhost:8080
+This will start both:
+- Frontend dev server: http://localhost:5173
+- Backend API server: http://localhost:8080
 
-## 项目结构
+## Project Structure
 
 ```
 .
-├── front/              # 前端项目
+├── front/              # Frontend project
 │   ├── src/
+│   │   ├── api/        # API services
+│   │   ├── components/ # React components
+│   │   ├── hooks/      # Custom hooks
+│   │   ├── i18n/       # Internationalization
+│   │   ├── pages/      # Page components
+│   │   ├── router/     # Route configuration
+│   │   ├── styles/     # Global styles
+│   │   └── utils/      # Utility functions
 │   ├── public/
 │   └── package.json
-├── back/               # 后端项目
-│   ├── config/         # 配置文件
-│   ├── middleware/     # 中间件
-│   ├── routes/         # 路由
-│   ├── services/       # 业务逻辑
-│   ├── server.js       # 入口文件
+├── back/               # Backend project
+│   ├── config/         # Configuration files
+│   ├── middleware/     # Middleware
+│   ├── routes/         # API routes
+│   ├── services/       # Business logic
+│   ├── server.js       # Entry point
 │   └── package.json
-├── database/           # 数据库脚本
+├── database/           # Database scripts
 │   └── init.sql
-└── package.json        # 根项目配置
+└── package.json        # Root project config
 ```
 
-## 可用命令
+## Available Commands
 
 ```bash
-# 安装所有依赖
+# Install all dependencies
 npm run install:all
 
-# 同时启动前后端（开发模式）
+# Start both frontend and backend (dev mode)
 npm run dev
 
-# 只启动前端
+# Start frontend only
 npm run dev:front
 
-# 只启动后端
+# Start backend only
 npm run dev:back
 
-# 构建前端生产版本
+# Build frontend for production
 npm run build
 
-# 启动后端生产模式
+# Start backend in production mode
 npm run start:back
 ```
 
-## API 接口
+## API Endpoints
 
-### 认证接口
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
 
-- `POST /api/auth/register` - 用户注册
-- `POST /api/auth/login` - 用户登录
+### User
+- `GET /api/user/info` - Get current user info (requires JWT Token)
 
-### 用户接口
+### Sensor Data
+- `POST /api/sensor/record` - Save sensor data
+- `GET /api/sensor/records` - Query sensor records (with pagination)
+- `DELETE /api/sensor/records` - Clear all sensor records
 
-- `GET /api/user/info` - 获取当前用户信息（需要 JWT Token）
+### Recorder
+- `POST /api/recorder/save` - Save GPS track
+- `GET /api/recorder/list` - Get track list
+- `DELETE /api/recorder/:id` - Delete track
 
-## 功能特性
+## Bluetooth Features
 
-- ✅ 用户注册和登录
-- ✅ JWT Token 认证
-- ✅ 密码加密存储
-- ✅ 响应式界面设计
-- 🔄 蓝牙设备连接（开发中）
-- 🔄 健康数据记录（开发中）
-- 🔄 数据统计和图表（开发中）
+### Web Bluetooth API Integration
+- Device scanning and connection
+- Auto-reconnect mechanism (up to 3 attempts)
+- Real-time sensor data streaming
+- Device control (LED light)
 
-## 开发说明
+### Supported Sensors
+- Heart Rate Monitor (HRM)
+- Accelerometer (3-axis)
+- Barometer (Temperature, Pressure, Altitude)
 
-### 前端开发
+### Data Management
+- Automatic data saving every 5 seconds
+- Historical data query with pagination
+- Data export functionality
+- Clear all records
 
-前端使用 Vite 开发服务器，支持热更新。修改代码后会自动刷新浏览器。
+## Development Guide
 
-### 后端开发
+### Frontend Development
 
-后端使用 nodemon 自动重启，修改代码后会自动重启服务器。
+The frontend uses Vite dev server with hot module replacement. Changes will automatically refresh the browser.
 
-### 数据库
+**Key Technologies:**
+- React Hooks for state management
+- Ant Design for UI components
+- Tailwind CSS for styling
+- i18next for internationalization
+- Framer Motion for animations
+- Recharts for data visualization
 
-使用 MySQL 8.0+，确保 MySQL 服务已启动。
+### Backend Development
 
-## 注意事项
+The backend uses nodemon for auto-restart. Changes will automatically restart the server.
 
-1. 确保 Node.js 版本 >= 18
-2. 确保 MySQL 服务已启动
-3. 首次运行前必须配置 `.env` 文件
-4. 首次运行前必须初始化数据库
+**Key Technologies:**
+- Express.js for REST API
+- MySQL2 for database operations
+- JWT for authentication
+- bcrypt for password hashing
 
-## 故障排除
+### Database
 
-### 端口被占用
+Uses MySQL 8.0+. Ensure MySQL service is running.
 
-如果 8080 或 5173 端口被占用，可以修改：
-- 后端端口：修改 `back/.env` 中的 `PORT`
-- 前端端口：修改 `front/vite.config.js` 中的 `server.port`
+**Tables:**
+- `users` - User accounts
+- `sensor_records` - Sensor data records
+- `recorder_tracks` - GPS track records
 
-### 数据库连接失败
+## Browser Compatibility
 
-检查：
-1. MySQL 服务是否启动
-2. `.env` 中的数据库配置是否正确
-3. 数据库是否已创建
+### Web Bluetooth API Support
+- Chrome 56+
+- Edge 79+
+- Opera 43+
 
-### 前端无法连接后端
+**Note:** HTTPS is required for Web Bluetooth API.
 
-检查：
-1. 后端服务是否正常启动
-2. `front/vite.config.js` 中的代理配置是否正确
+## Theme Customization
+
+### Color Scheme
+The project uses a warm brown/beige color scheme:
+
+**Light Mode:**
+- Primary: `#644a40` (Dark Brown)
+- Secondary: `#ffdfb5` (Beige)
+- Background: `#f9f9f9`
+
+**Dark Mode:**
+- Primary: `#ffe0c2` (Light Beige)
+- Secondary: `#393028` (Dark Brown)
+- Background: `#111111`
+
+### Customization
+Edit `front/src/styles/global.css` to customize theme colors.
+
+## Important Notes
+
+1. Ensure Node.js version >= 18
+2. Ensure MySQL service is running
+3. Configure `.env` file before first run
+4. Initialize database before first run
+5. Use HTTPS for Web Bluetooth API in production
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 8080 or 5173 is occupied, you can modify:
+- Backend port: Change `PORT` in `back/.env`
+- Frontend port: Change `server.port` in `front/vite.config.js`
+
+### Database Connection Failed
+
+Check:
+1. Is MySQL service running?
+2. Are database credentials in `.env` correct?
+3. Has the database been created?
+
+### Frontend Cannot Connect to Backend
+
+Check:
+1. Is backend service running properly?
+2. Is proxy configuration in `front/vite.config.js` correct?
+
+### Bluetooth Connection Issues
+
+Check:
+1. Is your browser supported? (Chrome/Edge/Opera)
+2. Are you using HTTPS? (required for Web Bluetooth)
+3. Is Bluetooth enabled on your device?
+4. Is the watch in pairing mode?
+
+## Documentation
+
+- [Theme Update Guide](front/THEME_UPDATE.md)
+- [MenuVertical Component Integration](front/MENU_VERTICAL_INTEGRATION.md)
+- [Backend API Documentation](back/README.md)
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+For issues and questions, please open an issue on GitHub.
