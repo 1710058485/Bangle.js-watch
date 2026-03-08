@@ -1,0 +1,17 @@
+{
+  "name": "watch-management-system",
+  "version": "1.0.0",
+  "description": "手表数据管理系统 - 全栈项目",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd front && npm install && cd ../back && npm install",
+    "dev": "concurrently \"npm run dev:back\" \"npm run dev:front\"",
+    "dev:front": "cd front && npm run dev",
+    "dev:back": "cd back && npm run dev",
+    "build": "cd front && npm run build",
+    "start:back": "cd back && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
